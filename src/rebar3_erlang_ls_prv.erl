@@ -3,7 +3,7 @@
 -export([init/1, do/1, format_error/1]).
 
 -define(PROVIDER, rebar3_erlang_ls).
--define(DEPS, [app_discovery]).
+-define(DEPS, [compile]).
 -define(AGENT, rebar_agent).
 
 %% ===================================================================
