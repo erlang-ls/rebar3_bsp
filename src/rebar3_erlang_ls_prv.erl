@@ -41,14 +41,17 @@ start_agent(State) ->
   {ok, GenState} = rebar_agent:init(State),
   gen_server:enter_loop(rebar_agent, [], GenState, {local, ?AGENT}, hibernate).
 
--spec setup_name(rebar_state:t()) -> atom().
+-spec setup_name(rebar_state:t()) -> ok.
 setup_name(State) ->
   {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
   Name = case Short of
-           undefined -> erlang_ls;
-           N         -> N
+           undefined ->
+             list_to_atom(filename:basename(rebar_state:dir(State)));
+           N ->
+             N
          end,
-  rebar_dist_utils:short(Name, Opts).
+  rebar_dist_utils:short(Name, Opts),
+  ok.
 
 -spec setup_paths(rebar_state:t()) -> ok.
 setup_paths(State) ->
