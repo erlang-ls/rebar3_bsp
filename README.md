@@ -1,7 +1,7 @@
 rebar3_erlang_ls
 =====
 
-Erlang LS rebar3 plugin
+rebar3 shell-like plugin to interact with the Erlang LS language server.
 
 Build
 -----
