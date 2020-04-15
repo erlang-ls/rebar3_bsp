@@ -19,14 +19,16 @@ init(State) ->
                                {example, "rebar3 erlang_ls"},
                                {opts, []},
                                {short_desc, "Erlang LS plugin for rebar3"},
-                               {desc, "Interact with the Erlang LS Language Server"}
+                               {desc, "Interact with the Erlang LS Language Server"},
+                               {profiles, [test]}
                               ]),
   {ok, rebar_state:add_provider(State, Provider)}.
 
 -spec do(rebar_state:t()) -> {ok, rebar_state:t()} | {error, string()}.
-do(State) ->
-  setup_name(State),
-  setup_paths(State),
+do(State0) ->
+  setup_name(State0),
+  setup_paths(State0),
+  State = inject_ct_hook(State0),
   start_agent(State),
   {ok, State}.
 
@@ -58,6 +60,14 @@ setup_name(State) ->
 setup_paths(State) ->
   code:add_pathsa(rebar_state:code_paths(State, all_deps)),
   ok = add_test_paths(State).
+
+-spec inject_ct_hook(rebar_state:t()) -> rebar_state:t().
+inject_ct_hook(State) ->
+  CTOpts0 = rebar_state:get(State, ct_opts, []),
+  CTHooks0 = proplists:get_value(ct_hooks, CTOpts0, []),
+  CTHooks = [rebar3_erlang_ls_ct_hook|CTHooks0],
+  CTOpts = lists:keystore(ct_hooks, 1, CTOpts0, {ct_hooks, CTHooks}),
+  rebar_state:set(State, ct_opts, CTOpts).
 
 -spec simulate_proc_lib() -> ok.
 simulate_proc_lib() ->
