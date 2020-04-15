@@ -2,7 +2,7 @@
 
 -export([init/1, do/1, format_error/1]).
 
--define(PROVIDER, rebar3_erlang_ls).
+-define(PROVIDER, erlang_ls).
 -define(DEPS, [compile]).
 -define(AGENT, rebar_agent).
 
@@ -12,14 +12,14 @@
 -spec init(rebar_state:t()) -> {ok, rebar_state:t()}.
 init(State) ->
   Provider = providers:create([
-                               {name, ?PROVIDER},            % The 'user friendly' name of the task
-                               {module, ?MODULE},            % The module implementation of the task
-                               {bare, true},                 % The task can be run by the user, always true
-                               {deps, ?DEPS},                % The list of dependencies
-                               {example, "rebar3 rebar3_erlang_ls"}, % How to use the plugin
-                               {opts, []},                   % list of options understood by the plugin
-                               {short_desc, "Erlang LS rebar3 plugin"},
-                               {desc, "Erlang LS rebar3 plugin"}
+                               {name, ?PROVIDER},
+                               {module, ?MODULE},
+                               {bare, true},
+                               {deps, ?DEPS},
+                               {example, "rebar3 erlang_ls"},
+                               {opts, []},
+                               {short_desc, "Erlang LS plugin for rebar3"},
+                               {desc, "Interact with the Erlang LS Language Server"}
                               ]),
   {ok, rebar_state:add_provider(State, Provider)}.
 

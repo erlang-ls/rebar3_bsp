@@ -1,5 +1,5 @@
 {application, rebar3_erlang_ls,
- [{description, "Erlang LS rebar3 plugin"},
+ [{description, "Erlang LS plugin for rebar3"},
   {vsn, "0.1.0"},
   {registered, []},
   {applications,
