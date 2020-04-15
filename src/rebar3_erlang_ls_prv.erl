@@ -39,6 +39,7 @@ start_agent(State) ->
   simulate_proc_lib(),
   true = register(?AGENT, self()),
   {ok, GenState} = rebar_agent:init(State),
+  io:format("Erlang LS Agent Started.~n"),
   gen_server:enter_loop(rebar_agent, [], GenState, {local, ?AGENT}, hibernate).
 
 -spec setup_name(rebar_state:t()) -> ok.
