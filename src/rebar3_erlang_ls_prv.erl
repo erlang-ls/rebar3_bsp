@@ -43,8 +43,12 @@ start_agent(State) ->
 
 -spec setup_name(rebar_state:t()) -> atom().
 setup_name(State) ->
-  {Long, Short, Opts} = rebar_dist_utils:find_options(State),
-  rebar_dist_utils:either(Long, Short, Opts).
+  {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
+  Name = case Short of
+           undefined -> erlang_ls;
+           N         -> N
+         end,
+  rebar_dist_utils:short(Name, Opts).
 
 -spec setup_paths(rebar_state:t()) -> ok.
 setup_paths(State) ->
