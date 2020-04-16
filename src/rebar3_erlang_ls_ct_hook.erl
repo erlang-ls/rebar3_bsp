@@ -6,10 +6,10 @@
         , on_tc_skip/4
         ]).
 
--define(SERVER, erlang_ls).
+-define(SERVER, rebar3_erlang_ls_agent).
 
 -type id()          :: any().
--type options()     :: #{}.
+-type options()     :: #{from := {pid(), reference()}}.
 -type suite()       :: atom().
 -type testcase()    :: atom() | tuple().
 -type state()       :: #{options := options()}.
@@ -23,14 +23,14 @@ init(_Id, Opts) ->
 
 -spec on_tc_fail(suite(), testcase(), fail_reason(), state()) -> state().
 on_tc_fail(_Suite, _TestCase, Reason, State) ->
-  send_result(Reason),
+  send_result(Reason, State),
   State.
 
 -spec on_tc_skip(suite(), testcase(), skip_reason(), state()) -> state().
 on_tc_skip(_Suite, _TestCase, {_ReasonType, Reason}, State) ->
-  send_result(Reason),
+  send_result(Reason, State),
   State.
 
--spec send_result(reason()) -> ok.
-send_result(Reason) ->
-  ?SERVER ! {result, Reason}.
+-spec send_result(reason(), state()) -> ok.
+send_result(Reason, #{options := #{from := From}}) ->
+  ?SERVER ! {result, From, Reason}.
