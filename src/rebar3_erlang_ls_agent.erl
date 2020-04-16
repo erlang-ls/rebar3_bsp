@@ -77,7 +77,8 @@ handle_call({run_ct_test, Args}, From, State) ->
           {reply, ok, State#{ rebar3_state => R3State1 }};
         {error, Error} ->
           rebar_log:log(debug, "Running CT tests failed", []),
-          {reply, {error, Error}, State#{ rebar3_state => R3State1 }}
+          %% The CT Hook will take care of returning a more meaningful error
+          {noreply, State#{ rebar3_state => R3State1 }}
       catch C:E:S ->
           rebar_log:log(debug, "Running CT failed", []),
           {reply, {error, {C, E, S}}, State#{ rebar3_state => R3State1 }}
