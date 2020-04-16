@@ -45,8 +45,10 @@ start_link(R3State) ->
 
 -spec run_ct_test(atom(), atom()) -> ok.
 run_ct_test(Suite, Case) ->
+  Groups = string:join([atom_to_list(G) || G <- ct_groups(Suite, Case)], ","),
   Args = [ io_lib:format("--suite=~s", [Suite])
          , io_lib:format("--case=~s", [Case])
+         , io_lib:format("--group=~s", [Groups])
          ],
   gen_server:call(?SERVER, {run_ct_test, Args}, infinity).
 
@@ -76,7 +78,7 @@ handle_call({run_ct_test, Args}, From, State) ->
           ok = rebar_paths:set_paths([deps, plugins], R3State1),
           {reply, ok, State#{ rebar3_state => R3State1 }};
         {error, Error} ->
-          rebar_log:log(debug, "Running CT tests failed", []),
+          rebar_log:log(debug, "Running CT tests failed: ~p", [Error]),
           %% The CT Hook will take care of returning a more meaningful error
           {noreply, State#{ rebar3_state => R3State1 }}
       catch C:E:S ->
@@ -124,3 +126,13 @@ inject_ct_hook(State, From) ->
   Hooks = lists:keystore(rebar3_erlang_ls_ct_hook, 1, Hooks0, Hook),
   Opts = lists:keystore(ct_hooks, 1, Opts0, {ct_hooks, Hooks}),
   rebar_state:set(State, ct_opts, Opts).
+
+-spec ct_groups(atom(), atom()) -> [atom()].
+ct_groups(Suite, Case) ->
+  case erlang:function_exported(Suite, groups, 0) of
+    true ->
+      [Group || {Group, _Prop, Cases} <-
+                  Suite:groups(), lists:member(Case, Cases)];
+    false ->
+      []
+  end.
