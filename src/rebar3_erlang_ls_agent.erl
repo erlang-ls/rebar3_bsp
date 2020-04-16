@@ -129,6 +129,9 @@ inject_ct_hook(State, From) ->
 
 -spec ct_groups(atom(), atom()) -> [atom()].
 ct_groups(Suite, Case) ->
+  %% Rebar3 purges code between runs, so let's ensure the module is
+  %% loaded
+  code:ensure_loaded(Suite),
   case erlang:function_exported(Suite, groups, 0) of
     true ->
       [Group || {Group, _Prop, Cases} <-
