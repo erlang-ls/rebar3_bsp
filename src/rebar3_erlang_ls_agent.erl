@@ -17,6 +17,7 @@
 
 -export([ start_link/1
         , run_ct_test/2
+        , run_xref/0
         ]).
 
 %% gen_server callbacks
@@ -51,6 +52,10 @@ run_ct_test(Suite, Case) ->
          , io_lib:format("--group=~s", [Groups])
          ],
   gen_server:call(?SERVER, {run_ct_test, Args}, infinity).
+
+-spec run_xref() -> ok.
+run_xref() ->
+  gen_server:call(?SERVER, {run_xref}, infinity).
 
 %%==============================================================================
 %% gen_server callbacks
@@ -88,7 +93,23 @@ handle_call({run_ct_test, Args}, From, State) ->
   catch C:E:S ->
       rebar_log:log(debug, "Compilation for CT failed", []),
       {reply, {error, {C, E, S}}, State#{ rebar3_state => R3State1 }}
-  end.
+  end;
+handle_call({run_xref}, _From, State) ->
+  #{ rebar3_state := R3State } = State,
+  rebar_log:log(debug, "Running XRef", []),
+  Result = case rebar3:run(R3State, ["xref"]) of
+             {ok, _} ->
+               rebar_log:log(debug, "XRef analysis completed", []),
+               %% rebar3 unset the paths on success, causing the second run to fail.
+               %% Let's revert that.
+               %% TODO: Report and link issue
+               ok = rebar_paths:set_paths([deps, plugins], R3State),
+               ok;
+             {error, Error} ->
+               rebar_log:log(debug, "Error running XRef analysis ~p", [Error]),
+               {error, Error}
+           end,
+  {reply, Result, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
 handle_cast(_Request, State) ->
