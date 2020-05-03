@@ -10,7 +10,6 @@
 %% Behaviours
 %%==============================================================================
 -behaviour(gen_server).
--behaviour(ebs_workspace).
 
 %%==============================================================================
 %% Exports
@@ -27,9 +26,6 @@
         , handle_cast/2
         , handle_info/2
         ]).
-
-%% EBS Workspace
--export([ build_targets/1 ]).
 
 %%==============================================================================
 %% Macro Definitions
@@ -60,14 +56,6 @@ run_ct_test(Suite, Case) ->
 -spec run_xref() -> ok.
 run_xref() ->
   gen_server:call(?SERVER, {run_xref}, infinity).
-
-%%==============================================================================
-%% EBS Workspace
-%%==============================================================================
--spec build_targets(ebs_workspace:build_targets_params()) ->
-        ebs_workspace:build_targets_result().
-build_targets(Params) ->
-  gen_server:call(?SERVER, {workspace, build_targets, Params}).
 
 %%==============================================================================
 %% gen_server callbacks
@@ -126,7 +114,15 @@ handle_call({workspace, build_targets, #{}}, _From, State) ->
   #{ rebar3_state := R3State } = State,
   Profiles = rebar_state:current_profiles(R3State),
   Targets = [ebs_build_target:make_build_target(P) || P <- Profiles],
-  {reply, Targets, State}.
+  {reply, Targets, State};
+handle_call({build_target, sources, Params}, _From, State) ->
+  #{ targets := Targets } = Params,
+  #{ rebar3_state := R3State } = State,
+  Apps = [A || A <- rebar_state:project_apps(R3State),
+               lists:usort(Targets) =:= rebar_app_info:profiles(A)],
+  Dirs = [rebar_app_info:dir(A) || A <- Apps],
+  #{ rebar3_state := R3State } = State,
+  {reply, Dirs, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
 handle_cast(_Request, State) ->
