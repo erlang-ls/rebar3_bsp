@@ -20,6 +20,10 @@
         , run_xref/0
         ]).
 
+%% BSP Callbacks
+-export([ handle_request/2
+        ]).
+
 %% gen_server callbacks
 -export([ init/1
         , handle_call/3
@@ -56,6 +60,14 @@ run_ct_test(Suite, Case) ->
 -spec run_xref() -> ok.
 run_xref() ->
   gen_server:call(?SERVER, {run_xref}, infinity).
+
+%%==============================================================================
+%% BSP Callbacks
+%%==============================================================================
+-spec handle_request(binary(), map()) -> map().
+handle_request(Method, Params) ->
+  %% TODO: Do not use infinity
+  gen_server:call(?SERVER, {request, Method, Params}, infinity).
 
 %%==============================================================================
 %% gen_server callbacks
@@ -110,19 +122,22 @@ handle_call({run_xref}, _From, State) ->
                {error, Error}
            end,
   {reply, Result, State};
-handle_call({workspace, build_targets, #{}}, _From, State) ->
+handle_call({request, <<"workspace/buildTargets">>, #{}}, _From, State) ->
   #{ rebar3_state := R3State } = State,
   Profiles = rebar_state:current_profiles(R3State),
   Targets = [ebs_build_target:make_build_target(P) || P <- Profiles],
-  {reply, Targets, State};
-handle_call({build_target, sources, Params}, _From, State) ->
+  {reply, #{targets => Targets}, State};
+handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
   #{ targets := Targets } = Params,
   #{ rebar3_state := R3State } = State,
   Apps = [A || A <- rebar_state:project_apps(R3State),
                lists:usort(Targets) =:= rebar_app_info:profiles(A)],
   Dirs = [rebar_app_info:dir(A) || A <- Apps],
   #{ rebar3_state := R3State } = State,
-  {reply, Dirs, State}.
+  {reply, #{items => Dirs}, State};
+handle_call(Request, _From, State) ->
+  rebar_log:log(debug, "Unexpected request: ~p", [Request]),
+  {noreply, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
 handle_cast(_Request, State) ->
