@@ -1,4 +1,4 @@
--module(rebar3_erlang_ls_ct_hook).
+-module(rebar3_bsp_ct_hook).
 
 -export([ init/2 ]).
 
@@ -6,7 +6,7 @@
         , on_tc_skip/4
         ]).
 
--define(SERVER, rebar3_erlang_ls_agent).
+-define(SERVER, rebar3_bsp_agent).
 
 -type id()          :: any().
 -type options()     :: #{from := {pid(), reference()}}.

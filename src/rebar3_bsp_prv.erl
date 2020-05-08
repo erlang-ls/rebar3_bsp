@@ -1,10 +1,10 @@
--module(rebar3_erlang_ls_prv).
+-module(rebar3_bsp_prv).
 
 -export([init/1, do/1, format_error/1]).
 
--define(PROVIDER, erlang_ls).
+-define(PROVIDER, erlang_bsp).
 -define(DEPS, [compile]).
--define(AGENT, rebar3_erlang_ls_agent).
+-define(AGENT, rebar3_bsp_agent).
 
 %% ===================================================================
 %% Public API
@@ -16,10 +16,10 @@ init(State) ->
                                {module, ?MODULE},
                                {bare, true},
                                {deps, ?DEPS},
-                               {example, "rebar3 erlang_ls"},
+                               {example, "rebar3 bsp"},
                                {opts, []},
-                               {short_desc, "Erlang LS plugin for rebar3"},
-                               {desc, "Interact with the Erlang LS Language Server"},
+                               {short_desc, "Build Server Protocol (BSP) plugin"},
+                               {desc, "Plugin adding Build Server Protocol (BSP) support for rebar3"},
                                {profiles, [test]}
                               ]),
   {ok, rebar_state:add_provider(State, Provider)}.
@@ -38,8 +38,8 @@ format_error(Reason) ->
 start_agent(State) ->
   simulate_proc_lib(),
   true = register(?AGENT, self()),
-  {ok, GenState} = rebar3_erlang_ls_agent:init(State),
-  gen_server:enter_loop(rebar3_erlang_ls_agent, [], GenState, {local, ?AGENT}, hibernate).
+  {ok, GenState} = rebar3_bsp_agent:init(State),
+  gen_server:enter_loop(rebar3_bsp_agent, [], GenState, {local, ?AGENT}, hibernate).
 
 -spec setup_name(rebar_state:t()) -> ok.
 setup_name(State) ->
@@ -57,5 +57,5 @@ setup_name(State) ->
 simulate_proc_lib() ->
   FakeParent = spawn_link(fun() -> timer:sleep(infinity) end),
   put('$ancestors', [FakeParent]),
-  put('$initial_call', {erlang_ls_agent, init, 1}),
+  put('$initial_call', {rebar3_bsp_agent, init, 1}),
   ok.

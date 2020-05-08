@@ -1,10 +1,11 @@
-{application, rebar3_erlang_ls,
- [{description, "Erlang LS plugin for rebar3"},
+{application, rebar3_bsp,
+ [{description, "Build Server Protocol plugin for rebar3"},
   {vsn, "0.1.0"},
   {registered, []},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    jsx
    ]},
   {env,[]},
   {modules, []},

@@ -1,4 +1,4 @@
--module(rebar3_ebs_build_target).
+-module(rebar3_bsp_build_target).
 
 -behaviour(ebs_build_target).
 
@@ -8,7 +8,7 @@
 %%==============================================================================
 %% Macro Definitions
 %%==============================================================================
--define(SERVER, rebar3_erlang_ls_agent).
+-define(SERVER, rebar3_bsp_agent).
 
 %%==============================================================================
 %% EBS Workspace

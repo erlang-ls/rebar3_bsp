@@ -1,10 +1,10 @@
 %%==============================================================================
-%% A stripped down version of rebar3's rebar_agent
+%% A BSP agent, based on a stripped down version of rebar3's rebar_agent
 %%
 %% Runs a process that holds a rebar3 state and can be used to
 %% statefully maintain loaded project state into a running VM.
 %%==============================================================================
--module(rebar3_erlang_ls_agent).
+-module(rebar3_bsp_agent).
 
 %%==============================================================================
 %% Behaviours
@@ -35,6 +35,12 @@
 %% Macro Definitions
 %%==============================================================================
 -define(SERVER, ?MODULE).
+%% TODO: Support User and System locations as well
+-define(BSP_DIR, ".bsp").
+-define(BSP_VSN, "2.0.0").
+-define(REBAR3_BSP_VSN, application:get_key(rebar3_bsp_agent, vsn)).
+-define( BSP_CONNECTION_FILE_PATH
+       , filename:join([?BSP_DIR, ?REBAR3_BSP_VSN ++ ".json"])).
 
 %%==============================================================================
 %% Type Definitions
@@ -74,6 +80,19 @@ handle_request(Method, Params) ->
 %%==============================================================================
 -spec init(rebar3_state:t()) -> {ok, state()}.
 init(R3State) ->
+  rebar_log:log( debug
+               , "Checking BSP connection file. [path=~p]"
+               , [?BSP_CONNECTION_FILE_PATH]
+               ),
+  case filelib:is_regular(?BSP_CONNECTION_FILE_PATH) of
+    true ->
+      rebar_log:log(debug, "Connection file found", []),
+      ok;
+    fase ->
+      rebar_log:log(debug, "Generating connection file", []),
+      ok = filelib:ensure_dir(?BSP_CONNECTION_FILE_PATH),
+      file:write_file(?BSP_CONNECTION_FILE_PATH, bsp_connection_file_content())
+  end,
   rebar_log:log(debug, "Starting Erlang LS Agent...~n", []),
   {ok, #{ rebar3_state => R3State }}.
 
@@ -171,8 +190,8 @@ disable_cover(State) ->
 inject_ct_hook(State, From) ->
   Opts0 = rebar_state:get(State, ct_opts, []),
   Hooks0 = proplists:get_value(ct_hooks, Opts0, []),
-  Hook = {rebar3_erlang_ls_ct_hook, #{from => term_to_binary(From)}},
-  Hooks = lists:keystore(rebar3_erlang_ls_ct_hook, 1, Hooks0, Hook),
+  Hook = {rebar3_bsp_ct_hook, #{from => term_to_binary(From)}},
+  Hooks = lists:keystore(rebar3_bsp_ct_hook, 1, Hooks0, Hook),
   Opts = lists:keystore(ct_hooks, 1, Opts0, {ct_hooks, Hooks}),
   rebar_state:set(State, ct_opts, Opts).
 
@@ -188,3 +207,13 @@ ct_groups(Suite, Case) ->
     false ->
       []
   end.
+
+-spec bsp_connection_file_content() -> binary().
+bsp_connection_file_content() ->
+  Content = #{ name       => "rebar3"
+             , version    => ?REBAR3_BSP_VSN
+             , bspVersion => ?BSP_VSN
+             , languages  => ["erlang"]
+             , argv       => ["rebar3", "bsp"]
+             },
+  jsx:encode(Content).
