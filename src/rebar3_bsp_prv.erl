@@ -2,7 +2,7 @@
 
 -export([init/1, do/1, format_error/1]).
 
--define(PROVIDER, erlang_bsp).
+-define(PROVIDER, bsp).
 -define(DEPS, [compile]).
 -define(AGENT, rebar3_bsp_agent).
 
