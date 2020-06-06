@@ -11,13 +11,14 @@
 %% ===================================================================
 -spec init(rebar_state:t()) -> {ok, rebar_state:t()}.
 init(State) ->
+  Opts = [{generate, undefined, "generate", boolean, "Generate the BSP Connection file and exit"}],
   Provider = providers:create([
                                {name, ?PROVIDER},
                                {module, ?MODULE},
                                {bare, true},
                                {deps, ?DEPS},
                                {example, "rebar3 bsp"},
-                               {opts, []},
+                               {opts, Opts},
                                {short_desc, "Build Server Protocol (BSP) plugin"},
                                {desc, "Plugin adding Build Server Protocol (BSP) support for rebar3"},
                                {profiles, [test]}
@@ -26,8 +27,15 @@ init(State) ->
 
 -spec do(rebar_state:t()) -> {ok, rebar_state:t()} | {error, string()}.
 do(State) ->
-  setup_name(State),
-  start_agent(State),
+  {Args, _} = rebar_state:command_parsed_args(State),
+  case proplists:is_defined(generate, Args) of
+    true ->
+      Dir = rebar_state:dir(State),
+      rebar3_bsp_connection:generate(Dir);
+    false ->
+      setup_name(State),
+      start_agent(State)
+  end,
   {ok, State}.
 
 -spec format_error(any()) ->  iolist().
