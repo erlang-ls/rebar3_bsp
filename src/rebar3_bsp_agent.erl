@@ -35,12 +35,6 @@
 %% Macro Definitions
 %%==============================================================================
 -define(SERVER, ?MODULE).
-%% TODO: Support User and System locations as well
--define(BSP_DIR, ".bsp").
--define(BSP_VSN, "2.0.0").
--define(REBAR3_BSP_VSN, application:get_key(rebar3_bsp_agent, vsn)).
--define( BSP_CONNECTION_FILE_PATH
-       , filename:join([?BSP_DIR, ?REBAR3_BSP_VSN ++ ".json"])).
 
 %%==============================================================================
 %% Type Definitions
@@ -80,18 +74,14 @@ handle_request(Method, Params) ->
 %%==============================================================================
 -spec init(rebar3_state:t()) -> {ok, state()}.
 init(R3State) ->
-  rebar_log:log( debug
-               , "Checking BSP connection file. [path=~p]"
-               , [?BSP_CONNECTION_FILE_PATH]
-               ),
-  case filelib:is_regular(?BSP_CONNECTION_FILE_PATH) of
+  Dir = rebar_state:dir(R3State),
+  case rebar3_bsp_connection:exists(Dir) of
     true ->
-      rebar_log:log(debug, "Connection file found", []),
+      rebar_log:log(debug, "Using existing connection file from: ~s", [Dir]),
       ok;
-    fase ->
-      rebar_log:log(debug, "Generating connection file", []),
-      ok = filelib:ensure_dir(?BSP_CONNECTION_FILE_PATH),
-      file:write_file(?BSP_CONNECTION_FILE_PATH, bsp_connection_file_content())
+    false ->
+      rebar_log:log(debug, "Generating new connection file in: ~s", [Dir]),
+      rebar3_bsp_connection:generate(Dir)
   end,
   rebar_log:log(debug, "Starting Erlang LS Agent...~n", []),
   {ok, #{ rebar3_state => R3State }}.
@@ -207,13 +197,3 @@ ct_groups(Suite, Case) ->
     false ->
       []
   end.
-
--spec bsp_connection_file_content() -> binary().
-bsp_connection_file_content() ->
-  Content = #{ name       => "rebar3"
-             , version    => ?REBAR3_BSP_VSN
-             , bspVersion => ?BSP_VSN
-             , languages  => ["erlang"]
-             , argv       => ["rebar3", "bsp"]
-             },
-  jsx:encode(Content).
