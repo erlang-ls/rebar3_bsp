@@ -39,7 +39,9 @@
 %%==============================================================================
 %% Type Definitions
 %%==============================================================================
--type state() :: #{ rebar3_state := rebar3_state:t() }.
+-type state() :: #{ rebar3_state := rebar3_state:t()
+                  , request_id := number()
+                  }.
 
 %%==============================================================================
 %% API
@@ -84,7 +86,7 @@ init(R3State) ->
       rebar3_bsp_connection:generate(Dir)
   end,
   rebar_log:log(debug, "Starting Erlang LS Agent...~n", []),
-  {ok, #{ rebar3_state => R3State }}.
+  {ok, #{ rebar3_state => R3State, request_id => 0 }}.
 
 -spec handle_call(any(), any(), state()) ->
         {reply, any(), state()} | {noreply, state()}.
@@ -144,6 +146,8 @@ handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
   Dirs = [rebar_app_info:dir(A) || A <- Apps],
   #{ rebar3_state := R3State } = State,
   {reply, #{items => Dirs}, State};
+handle_call({request, <<"build/initialized">>, Params}, _From, State) ->
+  {reply, #{displayName => "rebar3_bsp"}, State};
 handle_call(Request, _From, State) ->
   rebar_log:log(debug, "Unexpected request: ~p", [Request]),
   {noreply, State}.

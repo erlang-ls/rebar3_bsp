@@ -33,6 +33,7 @@ do(State) ->
       Dir = rebar_state:dir(State),
       rebar3_bsp_connection:generate(Dir);
     false ->
+      %% TODO: Distribution only needed for debugging
       setup_name(State),
       start_agent(State)
   end,
@@ -46,6 +47,9 @@ format_error(Reason) ->
 start_agent(State) ->
   simulate_proc_lib(),
   true = register(?AGENT, self()),
+  rebar_log:log(info, "Starting BSP group leader...", []),
+  rebar3_bsp_stdio:start_link(),
+  simulate_group_leader(),
   {ok, GenState} = rebar3_bsp_agent:init(State),
   gen_server:enter_loop(rebar3_bsp_agent, [], GenState, {local, ?AGENT}, hibernate).
 
@@ -67,3 +71,24 @@ simulate_proc_lib() ->
   put('$ancestors', [FakeParent]),
   put('$initial_call', {rebar3_bsp_agent, init, 1}),
   ok.
+
+-spec simulate_group_leader() -> ok.
+simulate_group_leader() ->
+  Pid = spawn_link(fun noop_group_leader/0),
+  erlang:group_leader(Pid, self()).
+
+-spec noop_group_leader() -> no_return().
+noop_group_leader() ->
+  receive
+    Message ->
+      rebar_log:log(debug, "Fake group leader intercepted output [message=~p]", [Message]),
+      case Message of
+        {io_request, From, ReplyAs, getopts} ->
+          From ! {io_reply, ReplyAs, []};
+        {io_request, From, ReplyAs, _} ->
+          From ! {io_reply, ReplyAs, ok};
+        _ ->
+          ok
+      end,
+      noop_group_leader()
+  end.
