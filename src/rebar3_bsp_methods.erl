@@ -3,6 +3,7 @@
 -export([ build_initialize/2
         , build_initialized/2
         , workspace_buildtargets/2
+        , buildtarget_compile/2
         ]).
 
 -type uri() :: binary().
@@ -51,6 +52,17 @@
                         , data => any()
                         }.
 -type workspaceBuildTargetsResult() :: #{ targets => [buildTarget()]}.
+
+-type compileParams() :: #{ targets := [buildTargetIdentifier()]
+                          , originId => binary()
+                          , arguments => [binary()]
+                          }.
+-type compileResult() :: #{ originId => binary()
+                          , statusCode := integer()
+                          , dataKind := binary()
+                          , data => any()
+                          }.
+
 -define(BSP_VSN, <<"2.0.0">>).
 
 -spec build_initialize(initializeBuildParams(), rebar3_state:t()) ->
@@ -64,6 +76,7 @@ build_initialize(_Params, _State) ->
 
 -spec build_initialized(initializedBuildParams(), rebar3_state:t()) -> ok.
 build_initialized(#{}, _State) ->
+  %% TODO: Initial compilation could happen here
   ok.
 
 -spec workspace_buildtargets(
@@ -73,6 +86,12 @@ workspace_buildtargets(#{}, State) ->
   Profiles = rebar_state:current_profiles(State),
   Targets = [#{id => atom_to_binary(P, utf8)} || P <- Profiles],
   #{ targets => Targets }.
+
+-spec buildtarget_compile(compileParams(), rebar3_state:t()) -> compileResult().
+buildtarget_compile(_Params, State) ->
+  {ok, _NewState} = rebar3:run(State, ["compile"]),
+  %% TODO: Compile test application and publish diagnostics
+  #{ statusCode => 0 }.
 
 -spec version() -> binary().
 version() ->
