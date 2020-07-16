@@ -11,6 +11,7 @@
 %% Test cases
 -export([ build_initialize/1
         , build_initialized/1
+        , workspace_buildtargets/1
         ]).
 
 %%==============================================================================
@@ -69,4 +70,10 @@ build_initialize(_Config) ->
 build_initialized(_Config) ->
   Result = rebar3_bsp_agent:handle_request(<<"build/initialized">>, #{}),
   ?assertEqual(ok, Result),
+  ok.
+
+-spec workspace_buildtargets(config()) -> ok.
+workspace_buildtargets(_Config) ->
+  Result = rebar3_bsp_agent:handle_request(<<"workspace/buildTargets">>, #{}),
+  ?assertEqual(#{ targets => [#{ id => <<"default">>}] }, Result),
   ok.

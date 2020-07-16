@@ -145,11 +145,6 @@ handle_call({run_xref}, _From, State) ->
                {error, Error}
            end,
   {reply, Result, State};
-handle_call({request, <<"workspace/buildTargets">>, #{}}, _From, State) ->
-  #{ rebar3_state := R3State } = State,
-  Profiles = rebar_state:current_profiles(R3State),
-  Targets = [ebs_build_target:make_build_target(P) || P <- Profiles],
-  {reply, #{targets => Targets}, State};
 handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
   #{ targets := Targets } = Params,
   #{ rebar3_state := R3State } = State,
@@ -159,8 +154,9 @@ handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
   #{ rebar3_state := R3State } = State,
   {reply, #{items => Dirs}, State};
 handle_call({request, Method, Params}, _From, State) ->
+  #{ rebar3_state := R3State } = State,
   Function = dispatch(Method),
-  Result = rebar3_bsp_methods:Function(Params),
+  Result = rebar3_bsp_methods:Function(Params, R3State),
   {reply, Result, State};
 handle_call(Request, _From, State) ->
   rebar_log:log(debug, "Unexpected request: ~p", [Request]),
