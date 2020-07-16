@@ -16,12 +16,14 @@
 %%==============================================================================
 
 -export([ start_link/1
+        , stop/0
         , run_ct_test/2
         , run_xref/0
         ]).
 
 %% BSP Callbacks
--export([ handle_request/2
+-export([ handle_notification/2
+        , handle_request/2
         ]).
 
 %% gen_server callbacks
@@ -50,6 +52,10 @@
 start_link(R3State) ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, R3State, []).
 
+-spec stop() -> ok.
+stop() ->
+  gen_server:call(?SERVER, stop).
+
 -spec run_ct_test(atom(), atom()) -> ok.
 run_ct_test(Suite, Case) ->
   Groups = string:join([atom_to_list(G) || G <- ct_groups(Suite, Case)], ","),
@@ -66,6 +72,10 @@ run_xref() ->
 %%==============================================================================
 %% BSP Callbacks
 %%==============================================================================
+-spec handle_notification(binary(), map()) -> map().
+handle_notification(Method, Params) ->
+  gen_server:cast(?SERVER, {notification, Method, Params}).
+
 -spec handle_request(binary(), map()) -> map().
 handle_request(Method, Params) ->
   %% TODO: Do not use infinity
@@ -90,6 +100,8 @@ init(R3State) ->
 
 -spec handle_call(any(), any(), state()) ->
         {reply, any(), state()} | {noreply, state()}.
+handle_call(stop, _From, State) ->
+  {stop, normal, ok, State};
 handle_call({run_ct_test, Args}, From, State) ->
   #{ rebar3_state := R3State } = State,
   R3State1 = update_state_for_ct(R3State, From),
@@ -146,13 +158,17 @@ handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
   Dirs = [rebar_app_info:dir(A) || A <- Apps],
   #{ rebar3_state := R3State } = State,
   {reply, #{items => Dirs}, State};
-handle_call({request, <<"build/initialized">>, Params}, _From, State) ->
-  {reply, #{displayName => "rebar3_bsp"}, State};
+handle_call({request, Method, Params}, _From, State) ->
+  Function = dispatch(Method),
+  Result = rebar3_bsp_methods:Function(Params),
+  {reply, Result, State};
 handle_call(Request, _From, State) ->
   rebar_log:log(debug, "Unexpected request: ~p", [Request]),
   {noreply, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
+handle_cast({notification, _Method, _Params}, State) ->
+  {noreply, State};
 handle_cast(_Request, State) ->
   {noreply, State}.
 
@@ -201,3 +217,10 @@ ct_groups(Suite, Case) ->
     false ->
       []
   end.
+
+-spec dispatch(binary()) -> atom().
+dispatch(Method) ->
+  Replaced = string:replace(Method, <<"/">>, <<"_">>),
+  Lower = string:lowercase(Replaced),
+  Binary = unicode:characters_to_binary(Lower),
+  binary_to_atom(Binary, utf8).
