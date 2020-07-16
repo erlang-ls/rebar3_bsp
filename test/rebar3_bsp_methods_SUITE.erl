@@ -10,6 +10,7 @@
 
 %% Test cases
 -export([ build_initialize/1
+        , build_initialized/1
         ]).
 
 %%==============================================================================
@@ -62,4 +63,10 @@ build_initialize(_Config) ->
                  , capabilities => #{}
                  , version => <<"0.1.0">>
                  }, Result),
+  ok.
+
+-spec build_initialized(config()) -> ok.
+build_initialized(_Config) ->
+  Result = rebar3_bsp_agent:handle_request(<<"build/initialized">>, #{}),
+  ?assertEqual(ok, Result),
   ok.

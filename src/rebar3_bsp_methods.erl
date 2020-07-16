@@ -1,6 +1,8 @@
 -module(rebar3_bsp_methods).
 
--export([ build_initialize/1 ]).
+-export([ build_initialize/1
+        , build_initialized/1
+        ]).
 
 -type uri() :: binary().
 -type buildClientCapabilities() :: #{ languageIds := [binary()] }.
@@ -29,6 +31,8 @@
                                   , data => any()
                                   }.
 
+-type initializedBuildParams() :: #{}.
+
 -define(BSP_VSN, <<"2.0.0">>).
 
 -spec build_initialize(initializeBuildParams()) -> initializeBuildResult().
@@ -38,6 +42,10 @@ build_initialize(_Params) ->
    , bspVersion => ?BSP_VSN
    , capabilities => #{}
    }.
+
+-spec build_initialized(initializedBuildParams()) -> ok.
+build_initialized(#{}) ->
+  ok.
 
 -spec version() -> binary().
 version() ->
