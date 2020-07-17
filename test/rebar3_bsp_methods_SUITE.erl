@@ -35,13 +35,17 @@ init_per_suite(Config) ->
   Config.
 
 -spec end_per_suite(config()) -> ok.
-end_per_suite(_Config) ->
+end_per_suite(Config) ->
+  file:set_cwd(?config(cwd, Config)),
   ok.
 
 -spec init_per_testcase(atom(), config()) -> config().
 init_per_testcase(_TestCase, Config) ->
-  rebar3_bsp_agent:start_link(rebar_state:new()),
-  Config.
+  {ok, Cwd} = file:get_cwd(),
+  ok = file:set_cwd(filename:join([code:priv_dir(rebar3_bsp), "sample"])),
+  {ok, State} = erl_subgraph_compile:init(rebar_state:new()),
+  rebar3_bsp_agent:start_link(State),
+  [{cwd, Cwd}|Config].
 
 -spec end_per_testcase(atom(), config()) -> ok.
 end_per_testcase(_TestCase, _Config) ->

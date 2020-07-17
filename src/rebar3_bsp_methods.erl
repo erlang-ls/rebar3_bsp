@@ -89,9 +89,17 @@ workspace_buildtargets(#{}, State) ->
 
 -spec buildtarget_compile(compileParams(), rebar3_state:t()) -> compileResult().
 buildtarget_compile(_Params, State) ->
-  {ok, _NewState} = rebar3:run(State, ["compile"]),
-  %% TODO: Compile test application and publish diagnostics
-  #{ statusCode => 0 }.
+  %% TODO: Hard-coded filename
+  try rebar3:run(State, ["erl_subgraph_compile", "-f", "src/sample_app.erl"]) of
+    {ok, _NewState} ->
+      %% TODO: Compile test application and publish diagnostics
+      #{ statusCode => 0 }
+  catch C:E:S ->
+      #{ class => C
+       , exception => E
+       , stacktrace => S
+       }
+  end.
 
 -spec version() -> binary().
 version() ->
