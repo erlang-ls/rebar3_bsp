@@ -5,6 +5,7 @@
         , workspace_buildtargets/2
         , buildtarget_compile/2
         , buildtarget_sources/2
+        , buildtarget_dependencysources/2
         ]).
 
 -include("rebar3_bsp.hrl").
@@ -49,10 +50,14 @@ buildtarget_compile(_Params, State) ->
 -spec buildtarget_sources(buildTargetSourcesParams(), rebar3_state:t()) ->
         buildTargetSourcesResult().
 buildtarget_sources(#{ targets := Targets }, State) ->
-  Apps = [A || A <- rebar_state:project_apps(State),
-               lists:usort(to_atom(Targets)) =:= rebar_app_info:profiles(A)],
-  Dirs = [rebar_app_info:dir(A) || A <- Apps],
-  #{ items => Dirs }.
+  Items = items(rebar_state:project_apps(State), Targets),
+  #{ items => Items }.
+
+-spec buildtarget_dependencysources(dependencySourcesParams(), rebar3_state:t()) ->
+        dependencySourcesResult().
+buildtarget_dependencysources(#{ targets := Targets }, State) ->
+  Items = items(rebar_state:all_deps(State), Targets),
+  #{ items => Items }.
 
 -spec version() -> binary().
 version() ->
@@ -62,3 +67,9 @@ version() ->
 -spec to_atom([binary()]) -> [atom()].
 to_atom(Binaries) ->
   [binary_to_atom(B, utf8) || B <- Binaries].
+
+-spec items([atom()], [binary()]) -> [uri()].
+items(Sources, Targets) ->
+  Apps = [A || A <- Sources
+                 , lists:usort(to_atom(Targets)) =:= rebar_app_info:profiles(A)],
+  [rebar_app_info:dir(A) || A <- Apps].

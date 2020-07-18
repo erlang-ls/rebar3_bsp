@@ -86,3 +86,10 @@
                         , roots => [uri()]
                         }.
 -type buildTargetSourcesResult() :: #{ items := [sourcesItem()] }.
+
+%% buildTarget/dependencySources
+-type dependencySourcesParams() :: #{ targets := [buildTargetIdentifier()] }.
+-type dependencySourcesItem() :: #{ target := buildTargetIdentifier()
+                                  , sources := [uri()]
+                                  }.
+-type dependencySourcesResult() :: #{ items := [dependencySourcesItem()] }.

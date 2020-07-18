@@ -14,6 +14,7 @@
         , workspace_buildtargets/1
         , buildtarget_compile/1
         , buildtarget_sources/1
+        , buildtarget_dependencysources/1
         ]).
 
 %%==============================================================================
@@ -94,5 +95,12 @@ buildtarget_compile(_Config) ->
 buildtarget_sources(_Config) ->
   Params = #{ targets => <<"default">> },
   Result = rebar3_bsp_agent:handle_request(<<"buildTarget/sources">>, Params),
+  ?assertEqual(#{ items => [] }, Result),
+  ok.
+
+-spec buildtarget_dependencysources(config()) -> ok.
+buildtarget_dependencysources(_Config) ->
+  Params = #{ targets => <<"default">> },
+  Result = rebar3_bsp_agent:handle_request(<<"buildTarget/dependencySources">>, Params),
   ?assertEqual(#{ items => [] }, Result),
   ok.
