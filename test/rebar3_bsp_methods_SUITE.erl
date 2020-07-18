@@ -44,7 +44,7 @@ end_per_suite(Config) ->
 -spec init_per_testcase(atom(), config()) -> config().
 init_per_testcase(_TestCase, Config) ->
   {ok, Cwd} = file:get_cwd(),
-  ok = file:set_cwd(filename:join([code:priv_dir(rebar3_bsp), "sample"])),
+  ok = file:set_cwd(sample_app_dir()),
   {ok, RebarConfig} = file:consult("rebar.config"),
   {ok, State} = erl_subgraph_compile:init(rebar_state:new(RebarConfig)),
   rebar3_bsp_agent:start_link(State),
@@ -67,9 +67,9 @@ all() ->
 -spec build_initialize(config()) -> ok.
 build_initialize(_Config) ->
   Result = rebar3_bsp_agent:handle_request(<<"build/initialize">>, #{}),
-  ?assertEqual( #{ displayName => <<"rebar3_bsp">>
-                 , bspVersion => <<"2.0.0">>
+  ?assertEqual( #{ bspVersion => <<"2.0.0">>
                  , capabilities => #{}
+                 , displayName => <<"rebar3_bsp">>
                  , version => <<"0.1.0">>
                  }, Result),
   ok.
@@ -94,14 +94,27 @@ buildtarget_compile(_Config) ->
 
 -spec buildtarget_sources(config()) -> ok.
 buildtarget_sources(_Config) ->
-  Params = #{ targets => <<"default">> },
+  %% Ensure the default build target is initialized
+  _Result = rebar3_bsp_agent:handle_request(<<"build/initialized">>, #{}),
+  Params = #{ targets => [<<"default">>] },
   Result = rebar3_bsp_agent:handle_request(<<"buildTarget/sources">>, Params),
-  ?assertEqual(#{ items => [] }, Result),
+  {ok, Cwd} = file:get_cwd(),
+  ?assertEqual(#{ items => [filename:join([Cwd, "_build", "default", "lib", "sample"])] }, Result),
   ok.
 
 -spec buildtarget_dependencysources(config()) -> ok.
 buildtarget_dependencysources(_Config) ->
-  Params = #{ targets => <<"default">> },
+  %% Ensure the default build target is initialized
+  _Result = rebar3_bsp_agent:handle_request(<<"build/initialized">>, #{}),
+  Params = #{ targets => [<<"default">>] },
   Result = rebar3_bsp_agent:handle_request(<<"buildTarget/dependencySources">>, Params),
-  ?assertEqual(#{ items => [] }, Result),
+  {ok, Cwd} = file:get_cwd(),
+  ?assertEqual(#{ items => [filename:join([Cwd, "_build", "default", "lib", "meck"])] }, Result),
   ok.
+
+%%==============================================================================
+%% Internal Functions
+%%==============================================================================
+-spec sample_app_dir() -> file:filename().
+sample_app_dir() ->
+  filename:join([code:priv_dir(rebar3_bsp), "sample"]).

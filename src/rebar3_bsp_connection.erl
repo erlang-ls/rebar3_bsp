@@ -57,7 +57,7 @@ details() ->
    , argv       => ?ARGV
    }.
 
--spec filepath(file:filename_all()) -> file:filename_all().
+-spec filepath(file:filename()) -> file:filename().
 filepath(BaseDir) ->
   Dir = filename:join([BaseDir, ?BSP_DIR]),
   filename:join([Dir, ?FILENAME]).

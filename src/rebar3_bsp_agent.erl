@@ -148,8 +148,8 @@ handle_call({run_xref}, _From, State) ->
 handle_call({request, Method, Params}, _From, State) ->
   #{ rebar3_state := R3State } = State,
   Function = dispatch(Method),
-  Result = rebar3_bsp_methods:Function(Params, R3State),
-  {reply, Result, State};
+  {Result, NewR3State} = rebar3_bsp_methods:Function(Params, R3State),
+  {reply, Result, State#{ rebar3_state => NewR3State }};
 handle_call(Request, _From, State) ->
   rebar_log:log(debug, "Unexpected request: ~p", [Request]),
   {noreply, State}.
