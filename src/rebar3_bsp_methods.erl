@@ -7,79 +7,7 @@
         , buildtarget_sources/2
         ]).
 
--type uri() :: binary().
--type buildClientCapabilities() :: #{ languageIds := [binary()] }.
--type initializeBuildParams() :: #{ displayName := binary()
-                                  , version := binary()
-                                  , bspVersion := binary()
-                                  , rootUri := uri()
-                                  , capabilities := buildClientCapabilities()
-                                  , data => any()
-                                  }.
--type compileProvider() :: #{ languageIds := [binary()] }.
--type testProvider() :: #{ languageIds := [binary()] }.
--type runProvider() :: #{ languageIds := [binary()] }.
--type buildServerCapabilities() :: #{ compileProvider => compileProvider()
-                                    , testProvider => testProvider()
-                                    , runProvider => runProvider()
-                                    , inverseSourcesProvider => boolean()
-                                    , dependencySourcesProvider => boolean()
-                                    , resourcesProvider => boolean()
-                                    , buildTargetChangedProvider => boolean()
-                                    }.
--type initializeBuildResult() :: #{ displayName := binary()
-                                  , version := binary()
-                                  , bspVersion := binary()
-                                  , capabilities := buildServerCapabilities()
-                                  , data => any()
-                                  }.
-
--type initializedBuildParams() :: #{}.
-
--type workspaceBuildTargetsParams() :: #{}.
--type buildTargetIdentifier() :: #{ uri := uri() }.
--type buildTargetCapabilities() :: #{ canCompile := boolean()
-                                    , canTest := boolean()
-                                    , canRun := boolean()
-                                    }.
--type buildTarget() :: #{ id := buildTargetIdentifier()
-                        , displayName => binary()
-                        , baseDirectory => uri()
-                        , tags => [binary()]
-                        , capabilities := buildTargetCapabilities()
-                        , languageIds := [binary()]
-                        , dependencies := [buildTargetIdentifier()]
-                        , dataKind => binary()
-                        , data => any()
-                        }.
--type workspaceBuildTargetsResult() :: #{ targets => [buildTarget()]}.
-
--type compileParams() :: #{ targets := [buildTargetIdentifier()]
-                          , originId => binary()
-                          , arguments => [binary()]
-                          }.
--type compileResult() :: #{ originId => binary()
-                          , statusCode := integer()
-                          , dataKind := binary()
-                          , data => any()
-                          }.
-
--define(SOURCE_ITEM_KIND_FILE, 1).
--define(SOURCE_ITEM_KIND_DIR, 2).
--type buildTargetSourcesParams() :: #{ targets := [buildTargetIdentifier()] }.
--type sourceItemKind() :: ?SOURCE_ITEM_KIND_FILE
-                        | ?SOURCE_ITEM_KIND_DIR.
--type sourceItem() :: #{ uri := uri()
-                       , kind := sourceItemKind()
-                       , generated := boolean()
-                       }.
--type sourcesItem() :: #{ target := buildTargetIdentifier()
-                        , sources := [sourceItem()]
-                        , roots => [uri()]
-                        }.
--type buildTargetSourcesResult() :: #{ items := [sourcesItem()] }.
-
--define(BSP_VSN, <<"2.0.0">>).
+-include("rebar3_bsp.hrl").
 
 -spec build_initialize(initializeBuildParams(), rebar3_state:t()) ->
         initializeBuildResult().
@@ -117,7 +45,6 @@ buildtarget_compile(_Params, State) ->
        }
   end.
 
-%% TODO: Move types to header
 %% TODO: Return new state in all functions
 -spec buildtarget_sources(buildTargetSourcesParams(), rebar3_state:t()) ->
         buildTargetSourcesResult().
