@@ -145,14 +145,6 @@ handle_call({run_xref}, _From, State) ->
                {error, Error}
            end,
   {reply, Result, State};
-handle_call({request, <<"buildTarget/sources">>, Params}, _From, State) ->
-  #{ targets := Targets } = Params,
-  #{ rebar3_state := R3State } = State,
-  Apps = [A || A <- rebar_state:project_apps(R3State),
-               lists:usort(Targets) =:= rebar_app_info:profiles(A)],
-  Dirs = [rebar_app_info:dir(A) || A <- Apps],
-  #{ rebar3_state := R3State } = State,
-  {reply, #{items => Dirs}, State};
 handle_call({request, Method, Params}, _From, State) ->
   #{ rebar3_state := R3State } = State,
   Function = dispatch(Method),

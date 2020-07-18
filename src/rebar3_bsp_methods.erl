@@ -4,6 +4,7 @@
         , build_initialized/2
         , workspace_buildtargets/2
         , buildtarget_compile/2
+        , buildtarget_sources/2
         ]).
 
 -type uri() :: binary().
@@ -63,6 +64,21 @@
                           , data => any()
                           }.
 
+-define(SOURCE_ITEM_KIND_FILE, 1).
+-define(SOURCE_ITEM_KIND_DIR, 2).
+-type buildTargetSourcesParams() :: #{ targets := [buildTargetIdentifier()] }.
+-type sourceItemKind() :: ?SOURCE_ITEM_KIND_FILE
+                        | ?SOURCE_ITEM_KIND_DIR.
+-type sourceItem() :: #{ uri := uri()
+                       , kind := sourceItemKind()
+                       , generated := boolean()
+                       }.
+-type sourcesItem() :: #{ target := buildTargetIdentifier()
+                        , sources := [sourceItem()]
+                        , roots => [uri()]
+                        }.
+-type buildTargetSourcesResult() :: #{ items := [sourcesItem()] }.
+
 -define(BSP_VSN, <<"2.0.0">>).
 
 -spec build_initialize(initializeBuildParams(), rebar3_state:t()) ->
@@ -101,7 +117,21 @@ buildtarget_compile(_Params, State) ->
        }
   end.
 
+%% TODO: Move types to header
+%% TODO: Return new state in all functions
+-spec buildtarget_sources(buildTargetSourcesParams(), rebar3_state:t()) ->
+        buildTargetSourcesResult().
+buildtarget_sources(#{ targets := Targets }, State) ->
+  Apps = [A || A <- rebar_state:project_apps(State),
+               lists:usort(to_atom(Targets)) =:= rebar_app_info:profiles(A)],
+  Dirs = [rebar_app_info:dir(A) || A <- Apps],
+  #{ items => Dirs }.
+
 -spec version() -> binary().
 version() ->
   {ok, Vsn} = application:get_key(rebar3_bsp, vsn),
   list_to_binary(Vsn).
+
+-spec to_atom([binary()]) -> [atom()].
+to_atom(Binaries) ->
+  [binary_to_atom(B, utf8) || B <- Binaries].

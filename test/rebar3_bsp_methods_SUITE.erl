@@ -13,6 +13,7 @@
         , build_initialized/1
         , workspace_buildtargets/1
         , buildtarget_compile/1
+        , buildtarget_sources/1
         ]).
 
 %%==============================================================================
@@ -87,4 +88,11 @@ workspace_buildtargets(_Config) ->
 buildtarget_compile(_Config) ->
   Result = rebar3_bsp_agent:handle_request(<<"buildTarget/compile">>, #{}),
   ?assertEqual(#{ statusCode => 0 }, Result),
+  ok.
+
+-spec buildtarget_sources(config()) -> ok.
+buildtarget_sources(_Config) ->
+  Params = #{ targets => <<"default">> },
+  Result = rebar3_bsp_agent:handle_request(<<"buildTarget/sources">>, Params),
+  ?assertEqual(#{ items => [] }, Result),
   ok.
