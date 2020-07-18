@@ -75,8 +75,8 @@ build_initialize(_Params, _State) ->
    }.
 
 -spec build_initialized(initializedBuildParams(), rebar3_state:t()) -> ok.
-build_initialized(#{}, _State) ->
-  %% TODO: Initial compilation could happen here
+build_initialized(#{}, State) ->
+  {ok, _NreState} = rebar3:run(State, ["compile"]),
   ok.
 
 -spec workspace_buildtargets(
