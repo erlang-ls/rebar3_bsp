@@ -45,7 +45,8 @@ end_per_suite(Config) ->
 init_per_testcase(_TestCase, Config) ->
   {ok, Cwd} = file:get_cwd(),
   ok = file:set_cwd(filename:join([code:priv_dir(rebar3_bsp), "sample"])),
-  {ok, State} = erl_subgraph_compile:init(rebar_state:new()),
+  {ok, RebarConfig} = file:consult("rebar.config"),
+  {ok, State} = erl_subgraph_compile:init(rebar_state:new(RebarConfig)),
   rebar3_bsp_agent:start_link(State),
   [{cwd, Cwd}|Config].
 
