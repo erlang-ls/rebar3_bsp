@@ -34,7 +34,7 @@ do(State) ->
       rebar3_bsp_connection:generate(Dir);
     false ->
       %% TODO: Distribution only needed for debugging
-      setup_name(State),
+      %% setup_name(State),
       start_agent(State)
   end,
   {ok, State}.
@@ -51,18 +51,18 @@ start_agent(State) ->
   {ok, GenState} = rebar3_bsp_agent:init(State),
   gen_server:enter_loop(rebar3_bsp_agent, [], GenState, {local, ?AGENT}, hibernate).
 
-%% TODO: Only for debugging purposes
--spec setup_name(rebar_state:t()) -> ok.
-setup_name(State) ->
-  {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
-  Name = case Short of
-           undefined ->
-             list_to_atom(filename:basename(rebar_state:dir(State)));
-           N ->
-             N
-         end,
-  rebar_dist_utils:short(Name, Opts),
-  ok.
+%% %% TODO: Only for debugging purposes
+%% -spec setup_name(rebar_state:t()) -> ok.
+%% setup_name(State) ->
+%%   {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
+%%   Name = case Short of
+%%            undefined ->
+%%              list_to_atom(filename:basename(rebar_state:dir(State)));
+%%            N ->
+%%              N
+%%          end,
+%%   rebar_dist_utils:short(Name, Opts),
+%%   ok.
 
 -spec simulate_proc_lib() -> ok.
 simulate_proc_lib() ->

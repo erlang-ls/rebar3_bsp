@@ -12,6 +12,7 @@
         , handle_call/3
         , handle_cast/2
         , handle_info/2
+        , terminate/2
         ]).
 
 %%==============================================================================
@@ -171,6 +172,11 @@ handle_cast(_Request, State) ->
 -spec handle_info(any(), state()) -> {noreply, state()}.
 handle_info(_Request, State) ->
   {noreply, State}.
+
+-spec terminate(any(), state()) -> ok.
+terminate(_Request, #state{port = Port} = _State) ->
+  ok = port_close(Port),
+  ok.
 
 %%==============================================================================
 %% Internal Functions
