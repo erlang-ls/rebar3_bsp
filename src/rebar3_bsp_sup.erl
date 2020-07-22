@@ -58,7 +58,6 @@ simulate_group_leader() ->
 noop_group_leader() ->
   receive
     Message ->
-      lager:info("noop_group_leader got [message=~p]", [Message]),
       case Message of
         {io_request, From, ReplyAs, getopts} ->
           From ! {io_reply, ReplyAs, []};
