@@ -45,14 +45,13 @@ format_error(Reason) ->
 
 -spec start_agent(rebar_state:t()) -> no_return().
 start_agent(State) ->
+  %% TODO: Can we hook this somehow in the sup tree?
   simulate_proc_lib(),
   true = register(?AGENT, self()),
-  rebar_log:log(info, "Starting BSP group leader...", []),
-  rebar3_bsp_stdio:start_link(),
-  simulate_group_leader(),
   {ok, GenState} = rebar3_bsp_agent:init(State),
   gen_server:enter_loop(rebar3_bsp_agent, [], GenState, {local, ?AGENT}, hibernate).
 
+%% TODO: Only for debugging purposes
 -spec setup_name(rebar_state:t()) -> ok.
 setup_name(State) ->
   {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
@@ -71,24 +70,3 @@ simulate_proc_lib() ->
   put('$ancestors', [FakeParent]),
   put('$initial_call', {rebar3_bsp_agent, init, 1}),
   ok.
-
--spec simulate_group_leader() -> ok.
-simulate_group_leader() ->
-  Pid = spawn_link(fun noop_group_leader/0),
-  erlang:group_leader(Pid, self()).
-
--spec noop_group_leader() -> no_return().
-noop_group_leader() ->
-  receive
-    Message ->
-      rebar_log:log(debug, "Fake group leader intercepted output [message=~p]", [Message]),
-      case Message of
-        {io_request, From, ReplyAs, getopts} ->
-          From ! {io_reply, ReplyAs, []};
-        {io_request, From, ReplyAs, _} ->
-          From ! {io_reply, ReplyAs, ok};
-        _ ->
-          ok
-      end,
-      noop_group_leader()
-  end.

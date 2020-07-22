@@ -8,6 +8,7 @@
     jsx
    ]},
   {env,[]},
+  {mod, {rebar3_bsp_app, []}},
   {modules, []},
   {licenses, ["Apache 2.0"]},
   {links, []}

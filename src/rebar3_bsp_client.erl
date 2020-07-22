@@ -18,12 +18,8 @@
 %% Exports
 %%==============================================================================
 %% Erlang API
--export([ start_link/0
+-export([ start_link/1
         , stop/0
-        ]).
-
-%% Connection
--export([ get_connection/1
         ]).
 
 %% Server Lifetime
@@ -45,7 +41,7 @@
 %% Defines
 %%==============================================================================
 -define(SERVER, ?MODULE).
--define(TIMEOUT, infinity).
+-define(TIMEOUT, 5000).
 
 %%==============================================================================
 %% Record Definitions
@@ -63,33 +59,17 @@
 -type state()      :: #state{}.
 -type request_id() :: pos_integer().
 -type params()     :: #{}.
--type connection() :: #{}.
 
 %%==============================================================================
 %% Erlang API
 %%==============================================================================
--spec start_link() -> {ok, pid()}.
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+-spec start_link(binary()) -> {ok, pid()}.
+start_link(RootPath) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, RootPath, []).
 
 -spec stop() -> ok.
 stop() ->
   gen_server:stop(?SERVER).
-
-%%==============================================================================
-%% Connection
-%%==============================================================================
--spec get_connection(uri()) -> {ok, connection()} | {error, not_found}.
-get_connection(RootUri) ->
-  RootPath = binary_to_list(els_uri:path(RootUri)),
-  Candidates = filelib:wildcard(filename:join([RootPath, ".bsp", "*.json"])),
-  case Candidates of
-    [] ->
-      {error, not_found};
-    [C|_] ->
-      {ok, Content} = file:read_file(C),
-      {ok, jsx:decode(Content, [return_maps, {labels, atom}])}
-  end.
 
 %%==============================================================================
 %% Server Lifetime
@@ -125,32 +105,36 @@ build_publish_diagnostics(Params) ->
 %%==============================================================================
 %% gen_server Callback Functions
 %%==============================================================================
--spec init([]) -> {ok, state()}.
-init([]) ->
+-spec init(binary()) -> {ok, state()}.
+init(RootPath) ->
   process_flag(trap_exit, true),
-  E = os:find_executable("rebar3"),
-  Port = open_port({spawn_executable, E}, [{args, ["bsp"]}, use_stdio, binary]),
+  [C|_] = filelib:wildcard(filename:join([RootPath, ".bsp", "*.json"])),
+  {ok, Content} = file:read_file(C),
+  #{argv := [Cmd|Params]} = jsx:decode(Content, [return_maps, {labels, atom}]),
+  E = os:find_executable(binary_to_list(Cmd)),
+  Args = [binary_to_list(P) || P <- Params],
+  Port = open_port({spawn_executable, E}, [{args, Args}, use_stdio, binary]),
   {ok, #state{port = Port}}.
 
 -spec handle_call(any(), any(), state()) -> {reply, any(), state()}.
 handle_call({build_initialized, Opts}, _From, #state{port = Port} = State) ->
   Method = method_lookup(build_initialized),
   Params = notification_params(Opts),
-  Content = els_protocol:notification(Method, Params),
+  Content = rebar3_bsp_protocol:notification(Method, Params),
   send(Port, Content),
   {reply, ok, State};
 handle_call({exit}, _From, #state{port = Port} = State) ->
   RequestId = State#state.request_id,
   Method = <<"exit">>,
   Params = #{},
-  Content = els_protocol:request(RequestId, Method, Params),
+  Content = rebar3_bsp_protocol:request(RequestId, Method, Params),
   send(Port, Content),
   {reply, ok, State};
 handle_call({shutdown}, From, #state{port = Port} = State) ->
   RequestId = State#state.request_id,
   Method = <<"shutdown">>,
   Params = #{},
-  Content = els_protocol:request(RequestId, Method, Params),
+  Content = rebar3_bsp_protocol:request(RequestId, Method, Params),
   send(Port, Content),
   {noreply, State#state{ request_id = RequestId + 1
                        , pending    = [{RequestId, From} | State#state.pending]
@@ -159,11 +143,13 @@ handle_call(Input = {build_initialize, _}, From, State) ->
   #state{ port = Port, request_id = RequestId } = State,
   Method = method_lookup(build_initialize),
   Params = request_params(Input),
-  Content = els_protocol:request(RequestId, Method, Params),
+  Content = rebar3_bsp_protocol:request(RequestId, Method, Params),
   send(Port, Content),
   {noreply, State#state{ request_id = RequestId + 1
                        , pending    = [{RequestId, From} | State#state.pending]
-                       }}.
+                       }};
+handle_call(Request, _From, State) ->
+  {reply, {error, {unexpected_request, Request}}, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
 handle_cast({handle_responses, Responses}, State) ->
@@ -181,8 +167,7 @@ handle_cast(_Request, State) ->
   {noreply, State}.
 
 -spec handle_info(any(), state()) -> {noreply, state()}.
-handle_info(Request, State) ->
-  lager:info("Request from port: ~p", [Request]),
+handle_info(_Request, State) ->
   {noreply, State}.
 
 %%==============================================================================
@@ -196,7 +181,6 @@ do_handle_messages([Message|Messages], Pending, Notifications, Requests) ->
   case is_response(Message) of
     true ->
       RequestId = maps:get(id, Message),
-      lager:debug("[CLIENT] Handling Response [response=~p]", [Message]),
       case lists:keyfind(RequestId, 1, Pending) of
         {RequestId, From} ->
           gen_server:reply(From, Message),
@@ -211,15 +195,11 @@ do_handle_messages([Message|Messages], Pending, Notifications, Requests) ->
     false ->
       case is_notification(Message) of
         true ->
-          lager:debug( "[CLIENT] Discarding Notification [message=~p]"
-                     , [Message]),
           do_handle_messages( Messages
                             , Pending
                             , [Message|Notifications]
                             , Requests);
         false ->
-          lager:debug( "[CLIENT] Discarding Server Request [message=~p]"
-                     , [Message]),
           do_handle_messages( Messages
                             , Pending
                             , Notifications
@@ -229,7 +209,7 @@ do_handle_messages([Message|Messages], Pending, Notifications, Requests) ->
 
 -spec request_params(tuple()) -> any().
 request_params({build_initialize, RootUri}) ->
-  {ok, Vsn} = application:get_key(reba3_bsp, vsn),
+  {ok, Vsn} = application:get_key(rebar3_bsp, vsn),
   #{ <<"displayName">>  => <<"Rebar3 BSP Client">>
    , <<"version">>      => list_to_binary(Vsn)
    , <<"bspVersion">>   => <<"2.0.0">>

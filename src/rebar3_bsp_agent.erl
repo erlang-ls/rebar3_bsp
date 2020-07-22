@@ -78,8 +78,7 @@ handle_notification(Method, Params) ->
 
 -spec handle_request(binary(), map()) -> map().
 handle_request(Method, Params) ->
-  %% TODO: Do not use infinity
-  gen_server:call(?SERVER, {request, Method, Params}, infinity).
+  gen_server:call(?SERVER, {request, Method, Params}).
 
 %%==============================================================================
 %% gen_server callbacks
@@ -152,7 +151,7 @@ handle_call({request, Method, Params}, _From, State) ->
   {reply, Result, State#{ rebar3_state => NewR3State }};
 handle_call(Request, _From, State) ->
   rebar_log:log(debug, "Unexpected request: ~p", [Request]),
-  {noreply, State}.
+  {reply, {error, {unexpected_request, Request}}, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
 handle_cast({notification, _Method, _Params}, State) ->

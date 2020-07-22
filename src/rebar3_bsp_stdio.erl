@@ -30,9 +30,8 @@ loop(Lines) ->
           ok = rebar3_bsp_agent:handle_notification(Method, Params);
         request ->
           Result = rebar3_bsp_agent:handle_request(Method, Params),
-          %% TODO: Add protocol and jsx as deps
           %% TODO: Hard-coded request id
-          Response = els_protocol:response(1, Result),
+          Response = rebar3_bsp_protocol:response(1, Result),
           io:format(standard_io, "~s", [Response])
       end,
       ?MODULE:loop([]);
