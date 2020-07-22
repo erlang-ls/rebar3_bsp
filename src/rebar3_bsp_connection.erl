@@ -7,6 +7,7 @@
 %% Exports
 %%==============================================================================
 -export([ generate/1
+        , discover/1
         , exists/1
         ]).
 
@@ -40,6 +41,15 @@ generate(BaseDir) ->
   ok = filelib:ensure_dir(Path),
   Details = jsx:encode(details(), [space, indent]),
   ok = file:write_file(Path, Details).
+
+-spec discover(string()) -> {ok, string(), [string()]}.
+discover(BaseDir) ->
+  [C|_] = filelib:wildcard(filename:join([BaseDir, ".bsp", "*.json"])),
+  {ok, Content} = file:read_file(C),
+  #{argv := [Cmd|Params]} = jsx:decode(Content, [return_maps, {labels, atom}]),
+  E = os:find_executable(binary_to_list(Cmd)),
+  Args = [binary_to_list(P) || P <- Params],
+  {ok, E, Args}.
 
 -spec exists(string()) -> boolean().
 exists(BaseDir) ->

@@ -19,6 +19,7 @@
 %%==============================================================================
 %% Erlang API
 -export([ start_link/1
+        , start_link/2
         , stop/0
         ]).
 
@@ -41,7 +42,7 @@
 %% Defines
 %%==============================================================================
 -define(SERVER, ?MODULE).
--define(TIMEOUT, 5000).
+-define(TIMEOUT, infinity).
 
 %%==============================================================================
 %% Record Definitions
@@ -63,9 +64,14 @@
 %%==============================================================================
 %% Erlang API
 %%==============================================================================
--spec start_link(binary()) -> {ok, pid()}.
+-spec start_link(string()) -> {ok, pid()}.
 start_link(RootPath) ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, RootPath, []).
+  {ok, Executable, Args} = rebar3_bsp_connection:discover(RootPath),
+  start_link(Executable, Args).
+
+-spec start_link(string(), [string()]) -> {ok, pid()}.
+start_link(Executable, Args) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, {Executable, Args}, []).
 
 -spec stop() -> ok.
 stop() ->
@@ -105,15 +111,11 @@ build_publish_diagnostics(Params) ->
 %%==============================================================================
 %% gen_server Callback Functions
 %%==============================================================================
--spec init(binary()) -> {ok, state()}.
-init(RootPath) ->
+-spec init({string(), [string()]}) -> {ok, state()}.
+init({Executable, Args}) ->
   process_flag(trap_exit, true),
-  [C|_] = filelib:wildcard(filename:join([RootPath, ".bsp", "*.json"])),
-  {ok, Content} = file:read_file(C),
-  #{argv := [Cmd|Params]} = jsx:decode(Content, [return_maps, {labels, atom}]),
-  E = os:find_executable(binary_to_list(Cmd)),
-  Args = [binary_to_list(P) || P <- Params],
-  Port = open_port({spawn_executable, E}, [{args, Args}, use_stdio, binary]),
+  Opts = [{args, Args}, use_stdio, binary],
+  Port = open_port({spawn_executable, Executable}, Opts),
   {ok, #state{port = Port}}.
 
 -spec handle_call(any(), any(), state()) -> {reply, any(), state()}.

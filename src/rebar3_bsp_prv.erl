@@ -39,7 +39,7 @@ do(State) ->
   end,
   {ok, State}.
 
--spec format_error(any()) ->  iolist().
+-spec format_error(any()) -> iolist().
 format_error(Reason) ->
   io_lib:format("~p", [Reason]).
 
