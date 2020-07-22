@@ -115,7 +115,7 @@ build_publish_diagnostics(Params) ->
 -spec init({string(), [string()]}) -> {ok, state()}.
 init({Executable, Args}) ->
   process_flag(trap_exit, true),
-  Opts = [{args, Args}, use_stdio, binary],
+  Opts = [{args, Args}, use_stdio, binary, {env, [{"QUIET", "1"}]}],
   Port = open_port({spawn_executable, Executable}, Opts),
   {ok, #state{port = Port}}.
 
