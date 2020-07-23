@@ -20,7 +20,7 @@
 %%==============================================================================
 %% Erlang API
 -export([ start_link/1
-        , start_link/2
+        , start_link/3
         , stop/0
         ]).
 
@@ -67,12 +67,13 @@
 %%==============================================================================
 -spec start_link(string()) -> {ok, pid()}.
 start_link(RootPath) ->
-  {ok, Executable, Args} = rebar3_bsp_connection:discover(RootPath),
-  start_link(Executable, Args).
+  {ok, Executable, Args, Env} = rebar3_bsp_connection:discover(RootPath),
+  start_link(Executable, Args, Env).
 
--spec start_link(string(), [string()]) -> {ok, pid()}.
-start_link(Executable, Args) ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, {Executable, Args}, []).
+-spec start_link(string(), [string()], [#{string() := string()}]) ->
+        {ok, pid()}.
+start_link(Executable, Args, Env) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, {Executable, Args, Env}, []).
 
 -spec stop() -> ok.
 stop() ->
@@ -112,10 +113,10 @@ build_publish_diagnostics(Params) ->
 %%==============================================================================
 %% gen_server Callback Functions
 %%==============================================================================
--spec init({string(), [string()]}) -> {ok, state()}.
-init({Executable, Args}) ->
+-spec init({string(), [string()], #{string() := string()}}) -> {ok, state()}.
+init({Executable, Args, Env}) ->
   process_flag(trap_exit, true),
-  Opts = [{args, Args}, use_stdio, binary, {env, [{"QUIET", "1"}]}],
+  Opts = [{args, Args}, use_stdio, binary, {env, maps:to_list(Env)}],
   Port = open_port({spawn_executable, Executable}, Opts),
   {ok, #state{port = Port}}.
 
