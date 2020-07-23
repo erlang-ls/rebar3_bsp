@@ -113,10 +113,10 @@ build_publish_diagnostics(Params) ->
 %%==============================================================================
 %% gen_server Callback Functions
 %%==============================================================================
--spec init({string(), [string()], #{string() := string()}}) -> {ok, state()}.
+-spec init({string(), [string()], [{string(), string()}]}) -> {ok, state()}.
 init({Executable, Args, Env}) ->
   process_flag(trap_exit, true),
-  Opts = [{args, Args}, use_stdio, binary, {env, maps:to_list(Env)}],
+  Opts = [{args, Args}, use_stdio, binary, {env, Env}],
   Port = open_port({spawn_executable, Executable}, Opts),
   {ok, #state{port = Port}}.
 
