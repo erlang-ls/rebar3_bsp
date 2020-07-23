@@ -68,7 +68,8 @@ details() ->
    , languages  => ?LANGUAGES
    , argv       => ?ARGV
      %% The `env` is a custom extension and it is not part of the
-     %% standard BSP protocol
+     %% standard BSP protocol yet. See the proposal at:
+     %% https://github.com/build-server-protocol/build-server-protocol/issues/124
    , env        => #{'QUIET' => <<"1">>}
    }.
 
