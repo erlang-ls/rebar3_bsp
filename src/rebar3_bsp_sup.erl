@@ -39,7 +39,7 @@ init([]) ->
               , intensity => 5
               , period    => 60
               },
-  simulate_group_leader(),
+  %% simulate_group_leader(),
   ChildSpecs = [ #{ id    => rebar3_bsp_stdio
                   , start => {rebar3_bsp_stdio, start_link, []}
                   }

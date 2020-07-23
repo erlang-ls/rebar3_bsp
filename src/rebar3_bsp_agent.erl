@@ -43,6 +43,7 @@
 %%==============================================================================
 -type state() :: #{ rebar3_state := rebar3_state:t()
                   , request_id := number()
+                  , stdio_server := pid()
                   }.
 
 %%==============================================================================
@@ -94,8 +95,10 @@ init(R3State) ->
       rebar_log:log(debug, "Generating new connection file in: ~s", [Dir]),
       rebar3_bsp_connection:generate(Dir)
   end,
-  rebar_log:log(debug, "Starting Erlang LS Agent...~n", []),
-  {ok, #{ rebar3_state => R3State, request_id => 0 }}.
+  {ok, StdIOServer} = rebar3_bsp_stdio:start_link(),
+  {ok, #{ rebar3_state => R3State
+        , request_id => 0
+        , stdio_server => StdIOServer}}.
 
 -spec handle_call(any(), any(), state()) ->
         {reply, any(), state()} | {noreply, state()}.

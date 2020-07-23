@@ -156,27 +156,29 @@ handle_call(Request, _From, State) ->
   {reply, {error, {unexpected_request, Request}}, State}.
 
 -spec handle_cast(any(), state()) -> {noreply, state()}.
-handle_cast({handle_responses, Responses}, State) ->
+handle_cast(_Request, State) ->
+  {noreply, State}.
+
+-spec handle_info(any(), state()) -> {noreply, state()}.
+handle_info({Port, {data, Data}}, #state{port = Port} = State) ->
   #state{ pending = Pending0
         , notifications = Notifications0
         , requests = Requests0
         } = State,
+  {Responses, _Buffer} = rebar3_bsp_jsonrpc:split(Data),
+  %% TODO: Refactor
   {Pending, Notifications, Requests}
     = do_handle_messages(Responses, Pending0, Notifications0, Requests0),
   {noreply, State#state{ pending = Pending
                        , notifications = Notifications
                        , requests = Requests
                        }};
-handle_cast(_Request, State) ->
-  {noreply, State}.
-
--spec handle_info(any(), state()) -> {noreply, state()}.
 handle_info(_Request, State) ->
   {noreply, State}.
 
 -spec terminate(any(), state()) -> ok.
-terminate(_Request, #state{port = Port} = _State) ->
-  ok = port_close(Port),
+terminate(_Reason, #state{port = Port} = _State) ->
+  true = port_close(Port),
   ok.
 
 %%==============================================================================
