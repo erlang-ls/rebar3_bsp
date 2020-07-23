@@ -1,7 +1,7 @@
 rebar3_bsp
 =====
 
-Rebar3 support for the Build Server Protocol (aka BSP) 2.0.0.
+Experimental Rebar3 support for the Build Server Protocol (aka BSP) 2.0.0.
 
 https://build-server-protocol.github.io
 
@@ -22,3 +22,12 @@ Add the plugin to your rebar config:
 Then just call your plugin directly in an existing application:
 
     $ rebar3 bsp
+
+Todo
+----
+
+* Handle Request IDs
+* Fix process leakage
+* Add POC for custom formatter
+* 100% coverage
+* Remove duplication with erlang-ls
