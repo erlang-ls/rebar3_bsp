@@ -33,7 +33,7 @@
 %%==============================================================================
 -spec init_per_suite(config()) -> config().
 init_per_suite(Config) ->
-  application:ensure_all_started(rebar3_bsp),
+  application:load(rebar3_bsp),
   Config.
 
 -spec end_per_suite(config()) -> ok.
