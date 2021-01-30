@@ -8,6 +8,9 @@
         , buildtarget_dependencysources/2
         ]).
 
+-export([ custom_format/2
+        ]).
+
 -include("rebar3_bsp.hrl").
 
 -spec build_initialize(initializeBuildParams(), rebar3_state:t()) ->
@@ -54,6 +57,10 @@ buildtarget_sources(#{ targets := Targets }, State) ->
 buildtarget_dependencysources(#{ targets := Targets }, State) ->
   Items = items(rebar_state:all_deps(State), Targets),
   {#{ items => Items }, State}.
+
+-spec custom_format(#{}, State) -> {map(), rebar_state:t()}.
+custom_format(#{} State) ->
+  {#{}, State}.
 
 %% Internal Functions
 
