@@ -58,9 +58,17 @@ buildtarget_dependencysources(#{ targets := Targets }, State) ->
   Items = items(rebar_state:all_deps(State), Targets),
   {#{ items => Items }, State}.
 
--spec custom_format(#{}, State) -> {map(), rebar_state:t()}.
-custom_format(#{} State) ->
-  {#{}, State}.
+-spec custom_format(#{}, rebar_state:t()) -> {map(), rebar_state:t()}.
+custom_format(Params, State) ->
+  #{<<"output">> := Output, <<"file">> := File} = Params,
+  Args = ["format", "-o", binary_to_list(Output), "-f", binary_to_list(File)],
+  case rebar3:run(State, Args) of
+    {ok, _NewState} ->
+      ok = rebar_paths:set_paths([deps, plugins], State),
+      {#{}, State};
+    {error, Reason} ->
+      {#{<<"error">> => unicode:characters_to_binary(Reason)}, State}
+  end.
 
 %% Internal Functions
 
