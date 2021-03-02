@@ -107,7 +107,8 @@ handle_call(stop, _From, State) ->
 handle_call({run_ct_test, Args}, From, State) ->
   #{ rebar3_state := R3State } = State,
   R3State1 = update_state_for_ct(R3State, From),
-  %% For some reason we have to explicitly invoke compilation
+  %% The ct command supports a mode where it doesn't recompile, and therefore does
+  %% not depend on the compile pass. Invoke compilation explicitly.
   rebar_log:log(debug, "Compiling code for CT", []),
   try rebar3:run(R3State1, ["compile"]) of
     {ok, _} ->
