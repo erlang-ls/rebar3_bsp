@@ -5,6 +5,7 @@
 -define(PROVIDER, bsp).
 -define(DEPS, [compile]).
 -define(AGENT, rebar3_bsp_agent).
+-define(NAME_PREFIX, "rebar3_bsp_").
 
 %% ===================================================================
 %% Public API
@@ -55,7 +56,7 @@ setup_name(State) ->
   {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
   Name = case Short of
            undefined ->
-             list_to_atom(filename:basename(rebar_state:dir(State)));
+             list_to_atom(?NAME_PREFIX ++ filename:basename(rebar_state:dir(State)));
            N ->
              N
          end,
