@@ -81,7 +81,7 @@ version() ->
 -spec items([atom()], [binary()]) -> [uri()].
 items(Sources, Targets) ->
   Apps = [A || A <- Sources, belongs_to_targets(Targets, A)],
-  [rebar_app_info:out_dir(A) || A <- Apps].
+  [rebar_app_info:dir(A) || A <- Apps].
 
 -spec belongs_to_targets([binary()], rebar_app_info:t()) -> boolean().
 belongs_to_targets(Targets, A) ->
