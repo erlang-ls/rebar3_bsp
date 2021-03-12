@@ -31,6 +31,7 @@
         , handle_call/3
         , handle_cast/2
         , handle_info/2
+        , format_status/2
         ]).
 
 %%==============================================================================
@@ -173,6 +174,9 @@ handle_info({'DOWN', _Ref, process, _Pid, normal}, State) ->
 handle_info(Request, State) ->
   rebar_log:log(debug, "Unexpected handle_info request: ~p", [Request]),
   {noreply, State}.
+
+format_status(_Opt, [_PDict, State]) ->
+  [{data, [{"State", State#{rebar3_state => yoinked}}]}].
 
 %%==============================================================================
 %% Internal Functions
