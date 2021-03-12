@@ -23,15 +23,16 @@ loop(Lines) ->
       Length = binary_to_integer(BinLength),
       {ok, Payload} = file:read(standard_io, Length),
       Request = jsx:decode(Payload, [return_maps]),
-      #{ <<"method">> := Method, <<"params">> := Params } = Request,
+      #{ <<"id">> := Id
+       , <<"method">> := Method
+       , <<"params">> := Params } = Request,
       RequestType = request_type(Request),
       case RequestType of
         notification ->
           ok = rebar3_bsp_agent:handle_notification(Method, Params);
         request ->
           Result = rebar3_bsp_agent:handle_request(Method, Params),
-          %% TODO: Hard-coded request id
-          Response = rebar3_bsp_protocol:response(1, Result),
+          Response = rebar3_bsp_protocol:response(Id, Result),
           io:format(standard_io, "~s", [Response])
       end,
       ?MODULE:loop([]);

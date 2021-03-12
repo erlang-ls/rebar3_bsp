@@ -34,6 +34,7 @@ build_initialized(#{}, State) ->
        ) -> {workspaceBuildTargetsResult(), rebar3_state:t()}.
 workspace_buildtargets(#{}, State) ->
   Profiles = rebar_state:current_profiles(State),
+  %% TODO: Targets should be of the form #{uri => binary()}
   Targets = [#{id => atom_to_binary(P, utf8)} || P <- Profiles],
   {#{ targets => Targets }, State}.
 
@@ -48,13 +49,13 @@ buildtarget_compile(_Params, State) ->
 
 -spec buildtarget_sources(buildTargetSourcesParams(), rebar3_state:t()) ->
         {buildTargetSourcesResult(), rebar3_state:t()}.
-buildtarget_sources(#{ targets := Targets }, State) ->
+buildtarget_sources(#{ <<"targets">> := Targets }, State) ->
   Items = items(rebar_state:project_apps(State), Targets),
   {#{ items => Items }, State}.
 
 -spec buildtarget_dependencysources(dependencySourcesParams(), rebar3_state:t()) ->
         {dependencySourcesResult(), rebar3_state:t()}.
-buildtarget_dependencysources(#{ targets := Targets }, State) ->
+buildtarget_dependencysources(#{ <<"targets">> := Targets }, State) ->
   Items = items(rebar_state:all_deps(State), Targets),
   {#{ items => Items }, State}.
 

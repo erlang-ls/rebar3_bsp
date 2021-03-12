@@ -39,7 +39,7 @@ init([]) ->
               , intensity => 5
               , period    => 60
               },
-  %% simulate_group_leader(),
+  simulate_group_leader(),
   ChildSpecs = [ #{ id    => rebar3_bsp_stdio
                   , start => {rebar3_bsp_stdio, start_link, []}
                   }
@@ -64,7 +64,6 @@ noop_group_leader() ->
         {io_request, From, ReplyAs, _} ->
           From ! {io_reply, ReplyAs, ok};
         _ ->
-          erlang:display(test),
           ok
       end,
       noop_group_leader()

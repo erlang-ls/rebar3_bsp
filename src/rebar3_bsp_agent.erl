@@ -31,6 +31,7 @@
         , handle_call/3
         , handle_cast/2
         , handle_info/2
+        , format_status/2
         ]).
 
 %%==============================================================================
@@ -42,7 +43,6 @@
 %% Type Definitions
 %%==============================================================================
 -type state() :: #{ rebar3_state := rebar3_state:t()
-                  , request_id := number()
                   , stdio_server := pid()
                   }.
 
@@ -97,7 +97,6 @@ init(R3State) ->
   end,
   {ok, StdIOServer} = rebar3_bsp_stdio:start_link(),
   {ok, #{ rebar3_state => R3State
-        , request_id => 0
         , stdio_server => StdIOServer}}.
 
 -spec handle_call(any(), any(), state()) ->
@@ -173,6 +172,9 @@ handle_info({'DOWN', _Ref, process, _Pid, normal}, State) ->
 handle_info(Request, State) ->
   rebar_log:log(debug, "Unexpected handle_info request: ~p", [Request]),
   {noreply, State}.
+
+format_status(_Opt, [_PDict, State]) ->
+  [{data, [{"State", State#{rebar3_state => redacted}}]}].
 
 %%==============================================================================
 %% Internal Functions

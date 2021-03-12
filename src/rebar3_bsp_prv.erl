@@ -50,17 +50,18 @@ start_agent(State) ->
   {ok, GenState} = rebar3_bsp_agent:init(State),
   gen_server:enter_loop(rebar3_bsp_agent, [], GenState, {local, ?AGENT}, hibernate).
 
-%% TODO: Only for debugging purposes
 -spec setup_name(rebar_state:t()) -> ok.
 setup_name(State) ->
   {_Long, Short, Opts} = rebar_dist_utils:find_options(State),
   Name = case Short of
            undefined ->
-             list_to_atom(?NAME_PREFIX ++ filename:basename(rebar_state:dir(State)));
+             list_to_atom(filename:basename(rebar_state:dir(State)));
            N ->
              N
          end,
-  rebar_dist_utils:short(Name, Opts),
+  Int = erlang:phash2(erlang:timestamp()),
+  Id = lists:flatten(io_lib:format("~s_~p_~p", [?NAME_PREFIX, Name, Int])),
+  rebar_dist_utils:short(list_to_atom(Id), Opts),
   ok.
 
 -spec simulate_proc_lib() -> ok.
