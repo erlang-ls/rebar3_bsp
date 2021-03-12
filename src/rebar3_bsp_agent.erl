@@ -174,7 +174,7 @@ handle_info(Request, State) ->
   {noreply, State}.
 
 format_status(_Opt, [_PDict, State]) ->
-  [{data, [{"State", State#{rebar3_state => yoinked}}]}].
+  [{data, [{"State", State#{rebar3_state => redacted}}]}].
 
 %%==============================================================================
 %% Internal Functions
