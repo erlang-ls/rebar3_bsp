@@ -2,7 +2,7 @@
 [{<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.3.0">>},0},
  {<<"erlang_subgraph_compile">>,
   {git,"https://github.com/ferd/erl_subgraph_compile.git",
-       {ref,"344c40e856ab88ececfde262f6fd67cdc354e6cf"}},
+       {ref,"1a254badc4ba410afb1393ada8ed798c25d10925"}},
   0},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},0},
  {<<"redbug">>,{pkg,<<"redbug">>,<<"2.0.2">>},0}]}.
