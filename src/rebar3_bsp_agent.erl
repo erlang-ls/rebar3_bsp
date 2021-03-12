@@ -42,7 +42,6 @@
 %% Type Definitions
 %%==============================================================================
 -type state() :: #{ rebar3_state := rebar3_state:t()
-                  , request_id := number()
                   , stdio_server := pid()
                   }.
 
@@ -97,7 +96,6 @@ init(R3State) ->
   end,
   {ok, StdIOServer} = rebar3_bsp_stdio:start_link(),
   {ok, #{ rebar3_state => R3State
-        , request_id => 0
         , stdio_server => StdIOServer}}.
 
 -spec handle_call(any(), any(), state()) ->
