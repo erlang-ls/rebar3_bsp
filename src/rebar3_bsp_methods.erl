@@ -50,7 +50,7 @@ buildtarget_compile(_Params, State) ->
 -spec buildtarget_sources(buildTargetSourcesParams(), rebar3_state:t()) ->
         {buildTargetSourcesResult(), rebar3_state:t()}.
 buildtarget_sources(#{ <<"targets">> := Targets }, State) ->
-  Items = items(rebar_app_info:project_apps(State), Targets),
+  Items = items(rebar_state:project_apps(State), Targets),
   {#{ items => Items }, State}.
 
 -spec buildtarget_dependencysources(dependencySourcesParams(), rebar3_state:t()) ->
