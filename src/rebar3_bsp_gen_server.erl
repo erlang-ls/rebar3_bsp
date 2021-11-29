@@ -41,7 +41,7 @@ send_request(ServerRef, Request) ->
 receive_response(RequestId, Timeout) ->
   case wait_response(RequestId, Timeout) of
     timeout ->
-      {Pid, Mon, Ref, ServerRef} = RequestId,
+      {Pid, Mon, Ref, _ServerRef} = RequestId,
       erlang:exit(Pid, kill),
       erlang:demonitor(Mon, [flush]),
       receive
